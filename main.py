@@ -166,23 +166,26 @@ def run_regression(X, y, cv=False):
 if __name__ == "__main__":
     # ---------- CLASSIFICAÇÃO ----------
     data = pd.read_csv("Datasets/student-mat.csv", sep=";")
-    # Criando alvo binário: aprovado (>=10) ou não
     data["pass"] = (data["G3"] >= 10).astype(int)
     X = data.drop(columns=["pass","G3"])
-    X = pd.get_dummies(X, drop_first=True)  # one-hot
+    X = pd.get_dummies(X, drop_first=True)
     y = data["pass"]
 
-    print("\n=== CLASSIFICAÇÃO HOLD-OUT ===")
-    print(run_classification(X, y, cv=False))
-    print("\n=== CLASSIFICAÇÃO CROSS-VALIDATION ===")
-    print(run_classification(X, y, cv=True))
+    df_class_holdout = run_classification(X, y, cv=False)
+    df_class_cv = run_classification(X, y, cv=True)
+
+    df_class_holdout.to_csv("classificacao_holdout.csv", index=False)
+    df_class_cv.to_csv("classificacao_crossval.csv", index=False)
 
     # ---------- REGRESSÃO ----------
     data = pd.read_csv("Datasets/winequality-red.csv", sep=";")
     X = data.drop(columns=["quality"])
     y = data["quality"]
 
-    print("\n=== REGRESSÃO HOLD-OUT ===")
-    print(run_regression(X, y, cv=False))
-    print("\n=== REGRESSÃO CROSS-VALIDATION ===")
-    print(run_regression(X, y, cv=True))
+    df_reg_holdout = run_regression(X, y, cv=False)
+    df_reg_cv = run_regression(X, y, cv=True)
+
+    df_reg_holdout.to_csv("regressao_holdout.csv", index=False)
+    df_reg_cv.to_csv("regressao_crossval.csv", index=False)
+
+    print("✅ Tabelas exportadas como CSV!")
