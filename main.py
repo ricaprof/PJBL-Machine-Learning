@@ -1,0 +1,188 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split, cross_validate, KFold
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.naive_bayes import GaussianNB
+from sklearn.linear_model import LogisticRegression, LinearRegression, Ridge
+from sklearn.svm import SVC, SVR
+from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.ensemble import (
+    RandomForestClassifier, RandomForestRegressor,
+    BaggingClassifier, BaggingRegressor,
+    AdaBoostClassifier, AdaBoostRegressor,
+    GradientBoostingClassifier, GradientBoostingRegressor,
+    StackingClassifier, StackingRegressor,
+    VotingClassifier, VotingRegressor
+)
+
+# ============================================================
+# FUNÇÕES AUXILIARES
+# ============================================================
+
+def classification_metrics(y_true, y_pred):
+    acc = accuracy_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred, average="weighted")
+    prec = precision_score(y_true, y_pred, average="weighted")
+    rec = recall_score(y_true, y_pred, average="weighted")
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel() if len(np.unique(y_true))==2 else (0,0,0,0)
+    espec = tn/(tn+fp) if (tn+fp)>0 else np.nan
+    return acc, f1, prec, rec, espec
+
+def regression_metrics(y_true, y_pred):
+    r2 = r2_score(y_true, y_pred)
+    mse = mean_squared_error(y_true, y_pred)
+    rmse = np.sqrt(mse)
+    mae = mean_absolute_error(y_true, y_pred)
+    return r2, mse, rmse, mae
+
+# ============================================================
+# CLASSIFICAÇÃO (Hold-out e CrossVal)
+# ============================================================
+
+def run_classification(X, y, cv=False):
+    results = []
+    models = {
+        "KNN": KNeighborsClassifier(),
+        "Decision Tree": DecisionTreeClassifier(),
+        "Naive Bayes": GaussianNB(),
+        "Logistic Regression": LogisticRegression(max_iter=500),
+        "MLP": MLPClassifier(max_iter=1000),
+        "SVM": SVC(),
+        "Random Forest": RandomForestClassifier(),
+        "Bagging": BaggingClassifier(),
+        "Boosting": AdaBoostClassifier(),
+        "GradientBoosting": GradientBoostingClassifier(),
+    }
+
+    # Ensemble simples (Voting)
+    ens = VotingClassifier(estimators=[
+        ('knn', KNeighborsClassifier()),
+        ('dt', DecisionTreeClassifier()),
+        ('nb', GaussianNB())
+    ], voting='hard')
+    models["Ensemble"] = ens
+
+    # Stacking
+    models["Stacking"] = StackingClassifier(
+        estimators=[('knn', KNeighborsClassifier()), ('dt', DecisionTreeClassifier()), ('nb', GaussianNB())],
+        final_estimator=LogisticRegression()
+    )
+
+    # Blending (simulado via Voting soft)
+    models["Blending"] = VotingClassifier(estimators=[
+        ('rf', RandomForestClassifier()),
+        ('mlp', MLPClassifier(max_iter=500))
+    ], voting='soft')
+
+    if cv:
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)
+        for name, model in models.items():
+            scores = cross_validate(model, X, y, cv=kf,
+                                    scoring=['accuracy','f1_weighted','precision_weighted','recall_weighted'])
+            results.append([name,
+                            scores['test_accuracy'].mean(),
+                            scores['test_f1_weighted'].mean(),
+                            scores['test_precision_weighted'].mean(),
+                            scores['test_recall_weighted'].mean(),
+                            np.nan])  # especificidade só em holdout binário
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.35, random_state=42)
+        for name, model in models.items():
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            acc, f1, prec, rec, espec = classification_metrics(y_test, y_pred)
+            results.append([name, acc, f1, prec, rec, espec])
+
+    df = pd.DataFrame(results, columns=["Modelo","Acurácia","F1","Precisão","Sensibilidade","Especificidade"])
+    return df
+
+# ============================================================
+# REGRESSÃO (Hold-out e CrossVal)
+# ============================================================
+
+def run_regression(X, y, cv=False):
+    results = []
+    models = {
+        "Linear Regression": LinearRegression(),
+        "KNN": KNeighborsRegressor(),
+        "Decision Tree": DecisionTreeRegressor(),
+        "Ridge": Ridge(),
+        "MLP": MLPRegressor(max_iter=1000),
+        "SVM": SVR(),
+        "Random Forest": RandomForestRegressor(),
+        "Bagging": BaggingRegressor(),
+        "Boosting": AdaBoostRegressor(),
+        "GradientBoosting": GradientBoostingRegressor(),
+    }
+
+    # Ensemble simples (média de regressões)
+    models["Ensemble"] = VotingRegressor([
+        ('lr', LinearRegression()),
+        ('dt', DecisionTreeRegressor())
+    ])
+
+    # Stacking
+    models["Stacking"] = StackingRegressor(
+        estimators=[('knn', KNeighborsRegressor()), ('dt', DecisionTreeRegressor())],
+        final_estimator=LinearRegression()
+    )
+
+    # Blending (simulado com Voting)
+    models["Blending"] = VotingRegressor([
+        ('rf', RandomForestRegressor()),
+        ('mlp', MLPRegressor(max_iter=500))
+    ])
+
+    if cv:
+        kf = KFold(n_splits=5, shuffle=True, random_state=42)
+        for name, model in models.items():
+            scores = cross_validate(model, X, y, cv=kf,
+                                    scoring=['r2','neg_mean_squared_error','neg_mean_absolute_error'])
+            results.append([name,
+                            scores['test_r2'].mean(),
+                            -scores['test_neg_mean_squared_error'].mean(),
+                            np.sqrt(-scores['test_neg_mean_squared_error'].mean()),
+                            -scores['test_neg_mean_absolute_error'].mean()])
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.35, random_state=42)
+        for name, model in models.items():
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            r2, mse, rmse, mae = regression_metrics(y_test, y_pred)
+            results.append([name, r2, mse, rmse, mae])
+
+    df = pd.DataFrame(results, columns=["Modelo","R2","MSE","RMSE","MAE"])
+    return df
+
+# ============================================================
+# EXEMPLO DE USO
+# ============================================================
+
+if __name__ == "__main__":
+    # ---------- CLASSIFICAÇÃO ----------
+    data = pd.read_csv("Datasets/student-mat.csv", sep=";")
+    # Criando alvo binário: aprovado (>=10) ou não
+    data["pass"] = (data["G3"] >= 10).astype(int)
+    X = data.drop(columns=["pass","G3"])
+    X = pd.get_dummies(X, drop_first=True)  # one-hot
+    y = data["pass"]
+
+    print("\n=== CLASSIFICAÇÃO HOLD-OUT ===")
+    print(run_classification(X, y, cv=False))
+    print("\n=== CLASSIFICAÇÃO CROSS-VALIDATION ===")
+    print(run_classification(X, y, cv=True))
+
+    # ---------- REGRESSÃO ----------
+    data = pd.read_csv("Datasets/winequality-red.csv", sep=";")
+    X = data.drop(columns=["quality"])
+    y = data["quality"]
+
+    print("\n=== REGRESSÃO HOLD-OUT ===")
+    print(run_regression(X, y, cv=False))
+    print("\n=== REGRESSÃO CROSS-VALIDATION ===")
+    print(run_regression(X, y, cv=True))
