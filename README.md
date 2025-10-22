@@ -82,4 +82,5 @@ Projeto desenvolvido por alunos da disciplina de **Aprendizado de Máquina (PjBL
 - Crystofer Samuel
 - Murilo Pedrazzani
 - Ricardo Vinicius
-- **Professor:** Edson Emílio Scalabrin  
+- **Professor:** Joelton Deonei Gotz
+
