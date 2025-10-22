@@ -24,10 +24,10 @@ def csv_to_table_image(csv_file, output_file):
 
 if __name__ == "__main__":
     arquivos = [
-        ("classificacao_holdout.csv", "classificacao_holdout.png"),
-        ("classificacao_crossval.csv", "classificacao_crossval.png"),
-        ("regressao_holdout.csv", "regressao_holdout.png"),
-        ("regressao_crossval.csv", "regressao_crossval.png"),
+        ("results/classificacao_holdout.csv", "photos/classificacao_holdout.png"),
+        ("results/classificacao_crossval.csv", "photos/classificacao_crossval.png"),
+        ("results/regressao_holdout.csv", "photos/regressao_holdout.png"),
+        ("results/regressao_crossval.csv", "photos/regressao_crossval.png"),
     ]
 
     for csv_file, img_file in arquivos:

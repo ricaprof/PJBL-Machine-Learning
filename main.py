@@ -174,8 +174,8 @@ if __name__ == "__main__":
     df_class_holdout = run_classification(X, y, cv=False)
     df_class_cv = run_classification(X, y, cv=True)
 
-    df_class_holdout.to_csv("classificacao_holdout.csv", index=False)
-    df_class_cv.to_csv("classificacao_crossval.csv", index=False)
+    df_class_holdout.to_csv("results/classificacao_holdout.csv", index=False)
+    df_class_cv.to_csv("results/classificacao_crossval.csv", index=False)
 
     # ---------- REGRESSÃO ----------
     data = pd.read_csv("Datasets/winequality-red.csv", sep=";")
@@ -185,7 +185,7 @@ if __name__ == "__main__":
     df_reg_holdout = run_regression(X, y, cv=False)
     df_reg_cv = run_regression(X, y, cv=True)
 
-    df_reg_holdout.to_csv("regressao_holdout.csv", index=False)
-    df_reg_cv.to_csv("regressao_crossval.csv", index=False)
+    df_reg_holdout.to_csv("results/regressao_holdout.csv", index=False)
+    df_reg_cv.to_csv("results/regressao_crossval.csv", index=False)
 
     print("✅ Tabelas exportadas como CSV!")
