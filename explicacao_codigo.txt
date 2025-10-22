@@ -1,0 +1,132 @@
+# Projeto PjBL – Machine Learning
+
+Este projeto implementa os **4 experimentos principais** de classificação e regressão usando diferentes algoritmos de Machine Learning, conforme solicitado no PjBL da disciplina.
+
+## 📂 Estrutura dos Experimentos
+
+O código `pjbl.py` executa automaticamente os seguintes experimentos:
+
+1. **Classificação Hold-out**
+   - Split: 65% treino / 35% teste
+   - Dataset: `student-mat.csv` ou `student-por.csv`
+   - Alvo: `pass` (0 = Reprovado, 1 = Aprovado)
+   - Modelos: 
+     - KNN
+     - Decision Tree
+     - Naive Bayes
+     - Logistic Regression
+     - MLP (Rede Neural)
+     - SVM
+     - Random Forest
+     - Bagging
+     - Boosting
+     - Gradient Boosting
+     - Stacking
+     - Blending
+     - Ensemble simples
+
+2. **Classificação Cross-Validation**
+   - Protocolo: 5 folds estratificados
+   - Mesmos datasets e modelos
+   - Média dos resultados em cada métrica
+
+3. **Regressão Hold-out**
+   - Split: 65% treino / 35% teste
+   - Dataset: `winequality-red.csv` ou `winequality-white.csv`
+   - Alvo: `quality` (nota de 0 a 10)
+   - Modelos:
+     - Linear Regression
+     - KNN Regressor
+     - Decision Tree Regressor
+     - Ridge Regression
+     - MLP Regressor
+     - SVM Regressor
+     - Random Forest Regressor
+     - Bagging Regressor
+     - Boosting Regressor
+     - Gradient Boosting Regressor
+     - Stacking Regressor
+     - Blending Regressor
+     - Ensemble simples
+
+4. **Regressão Cross-Validation**
+   - Protocolo: 5 folds
+   - Mesmos datasets e modelos
+   - Média dos resultados
+
+---
+
+## 📊 Métricas Calculadas
+
+### Classificação
+- **Acurácia**: proporção de acertos totais  
+- **F1-Score**: média harmônica entre precisão e recall  
+- **Precisão**: TP / (TP + FP)  
+- **Sensibilidade (Recall)**: TP / (TP + FN)  
+- **Especificidade**: TN / (TN + FP)  
+  > Observação: só faz sentido em classificação binária.
+
+### Regressão
+- **R² (Coeficiente de Determinação)**: proporção da variância explicada  
+- **MSE (Erro Quadrático Médio)**  
+- **RMSE (Raiz do Erro Quadrático Médio)**  
+- **MAE (Erro Absoluto Médio)**
+
+---
+
+## 💾 Saídas
+
+Ao rodar `pjbl.py`, são gerados 4 arquivos CSV:
+
+- `classificacao_holdout.csv`
+- `classificacao_crossval.csv`
+- `regressao_holdout.csv`
+- `regressao_crossval.csv`
+
+Cada CSV contém os resultados das métricas para todos os modelos.
+
+---
+
+## 🎨 Transformar CSV em Tabelas
+
+O script `csv_to_tables.py` converte os CSVs em imagens PNG de tabelas formatadas, ideais para relatórios e apresentações.
+
+Exemplo de uso:
+```bash
+python csv_to_tables.py
+```
+
+Saídas geradas:
+- `classificacao_holdout.png`
+- `classificacao_crossval.png`
+- `regressao_holdout.png`
+- `regressao_crossval.png`
+
+---
+
+## 🚀 Como rodar o projeto
+
+1. Crie um ambiente virtual:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Instale as dependências:
+   ```bash
+   pip install pandas numpy scikit-learn matplotlib
+   ```
+
+3. Execute o script principal:
+   ```bash
+   python pjbl.py
+   ```
+
+4. (Opcional) Converta CSVs em tabelas:
+   ```bash
+   python csv_to_tables.py
+   ```
+
+---
+
+✅ Com isso, você terá os **4 experimentos completos**, resultados exportados em **CSV** e ainda tabelas visuais em **PNG** para usar no relatório final.
