@@ -3,7 +3,7 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split, cross_validate, KFold
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, make_scorer
 
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -31,6 +31,12 @@ def classification_metrics(y_true, y_pred):
     rec = recall_score(y_true, y_pred, average="weighted")
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel() if len(np.unique(y_true))==2 else (0,0,0,0)
     espec = tn/(tn+fp) if (tn+fp)>0 else np.nan
+    print(f"tn = {tn} \n fp = {fp} \n")
+    #Imprimir matriz de confusão para testar
+    confusion = confusion_matrix(y_true=y_true, y_pred=y_pred)
+    print(confusion)
+
+
     return acc, f1, prec, rec, espec
 
 def regression_metrics(y_true, y_pred):
@@ -43,6 +49,23 @@ def regression_metrics(y_true, y_pred):
 # ============================================================
 # CLASSIFICAÇÃO (Hold-out e CrossVal)
 # ============================================================
+
+# Função de especificidade
+def specificity_score(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    if cm.shape == (2,2):  # só faz sentido para classificação binária
+        tn, fp, fn, tp = cm.ravel()
+        return tn / (tn + fp) if (tn+fp) > 0 else 0
+    else:
+        # para multi-classe: calcula média da especificidade "classe vs resto"
+        especs = []
+        for i in range(len(cm)):
+            tn = cm.sum() - (cm[i,:].sum() + cm[:,i].sum() - cm[i,i])
+            fp = cm[:,i].sum() - cm[i,i]
+            especs.append(tn / (tn + fp) if (tn+fp) > 0 else 0)
+        return np.mean(especs)
+
+specificity = make_scorer(specificity_score)
 
 def run_classification(X, y, cv=False):
     results = []
@@ -73,7 +96,7 @@ def run_classification(X, y, cv=False):
         final_estimator=LogisticRegression()
     )
 
-    # Blending (simulado via Voting soft)
+    # Blending (simulado via Voting sonft)
     models["Blending"] = VotingClassifier(estimators=[
         ('rf', RandomForestClassifier()),
         ('mlp', MLPClassifier(max_iter=500))
@@ -81,15 +104,22 @@ def run_classification(X, y, cv=False):
 
     if cv:
         kf = KFold(n_splits=5, shuffle=True, random_state=42)
+        scoring = {
+            'accuracy': 'accuracy',
+            'f1_weighted': 'f1_weighted',
+            'precision_weighted': 'precision_weighted',
+            'recall_weighted': 'recall_weighted',
+            'specificity': specificity
+        }
         for name, model in models.items():
-            scores = cross_validate(model, X, y, cv=kf,
-                                    scoring=['accuracy','f1_weighted','precision_weighted','recall_weighted'])
+            scores = cross_validate(model, X, y, cv=kf, scoring=scoring)
             results.append([name,
                             scores['test_accuracy'].mean(),
                             scores['test_f1_weighted'].mean(),
                             scores['test_precision_weighted'].mean(),
                             scores['test_recall_weighted'].mean(),
-                            np.nan])  # especificidade só em holdout binário
+                            scores['test_specificity'].mean()])
+
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.35, random_state=42)
         for name, model in models.items():
