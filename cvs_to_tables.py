@@ -5,6 +5,15 @@ def csv_to_table_image(csv_file, output_file):
     # Lê o CSV
     df = pd.read_csv(csv_file)
 
+    # Converte valores numéricos entre 0 e 1 para %
+    for col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[col]):
+            # multiplica apenas se todos os valores estiverem no intervalo [0,1]
+            if ((df[col] >= 0) & (df[col] <= 1)).all():
+                df[col] = df[col].apply(lambda x: f"{x*100:.2f}%")
+            else:
+                df[col] = df[col].apply(lambda x: f"{x:.2f}" if isinstance(x, (int, float)) else x)
+
     # Cria figura
     fig, ax = plt.subplots(figsize=(10, len(df)*0.6))  # ajusta altura conforme nº linhas
     ax.axis("off")
