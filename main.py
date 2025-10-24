@@ -225,4 +225,4 @@ if __name__ == "__main__":
     df_reg_holdout.to_csv("results/regressao_holdout.csv", index=False)
     df_reg_cv.to_csv("results/regressao_crossval.csv", index=False)
 
-    print("✅ Tabelas exportadas como CSV!")
+    print("✅ Tabelas exportadas como CSV!")    
