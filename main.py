@@ -22,7 +22,7 @@ from sklearn.ensemble import (
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.linear_model import ElasticNet
 
-
+from Blending import *
 
 # ============================================================
 # FUNÇÕES AUXILIARES
@@ -77,7 +77,7 @@ def run_classification(X, y, cv=False):
         "KNN": KNeighborsClassifier(),
         "Decision Tree": DecisionTreeClassifier(),
         "Naive Bayes": GaussianNB(),
-        "Logistic Regression": LogisticRegression(max_iter=500),
+        "Logistic Regression": LogisticRegression(max_iter=1000),
         "MLP": MLPClassifier(max_iter=1000),
         "SVM": SVC(),
         "Random Forest": RandomForestClassifier(),
@@ -158,10 +158,14 @@ def run_regression(X, y, cv=False):
     }
 
     # Ensemble simples (média de regressões)
-    models["Ensemble"] = VotingRegressor([
-        ('lr', LinearRegression()),
-        ('dt', DecisionTreeRegressor())
-    ])
+    models["Blending"] = BlendingClassifier(
+        base_models=[
+            ('rf', RandomForestClassifier()),
+            ('mlp', MLPClassifier(max_iter=1000))
+        ],
+        meta_model=LogisticRegression()
+    )
+    
 
     # Stacking
     models["Stacking"] = StackingRegressor(
@@ -172,7 +176,7 @@ def run_regression(X, y, cv=False):
     # Blending (simulado com Voting)
     models["Blending"] = VotingRegressor([
         ('rf', RandomForestRegressor()),
-        ('mlp', MLPRegressor(max_iter=500))
+        ('mlp', MLPRegressor(max_iter=1000))
     ])
 
     if cv:
@@ -202,7 +206,7 @@ def run_regression(X, y, cv=False):
 
 if __name__ == "__main__":
     # ---------- CLASSIFICAÇÃO ----------
-    data = pd.read_csv("Datasets/student-mat.csv", sep=";")
+    data = pd.read_csv("Datasets/student-por.csv", sep=";")
     data["pass"] = (data["G3"] >= 10).astype(int)
     X = data.drop(columns=["pass","G3"])
     X = pd.get_dummies(X, drop_first=True)
