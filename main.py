@@ -19,6 +19,10 @@ from sklearn.ensemble import (
     StackingClassifier, StackingRegressor,
     VotingClassifier, VotingRegressor
 )
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.linear_model import ElasticNet
+
+
 
 # ============================================================
 # FUNÇÕES AUXILIARES
@@ -80,6 +84,7 @@ def run_classification(X, y, cv=False):
         "Bagging": BaggingClassifier(),
         "Boosting": AdaBoostClassifier(),
         "GradientBoosting": GradientBoostingClassifier(),
+        "QuadraticDiscrimanation": QuadraticDiscriminantAnalysis()
     }
 
     # Ensemble simples (Voting)
@@ -148,6 +153,8 @@ def run_regression(X, y, cv=False):
         "Bagging": BaggingRegressor(),
         "Boosting": AdaBoostRegressor(),
         "GradientBoosting": GradientBoostingRegressor(),
+        "ElasticNet": ElasticNet(),
+
     }
 
     # Ensemble simples (média de regressões)
